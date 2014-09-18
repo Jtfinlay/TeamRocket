@@ -16,10 +16,19 @@ class Frame:
         self.F = F
         
         # Create blocks
+        block_length = F/K
         for i in range(K):
-            self.blocks.append(Block.Block());
+            self.blocks.append(Block.Block(block_length));
+
+    # Checks probability of error on every bit.
+    #
+    # @return: bool indicating whether transmission successful. (If 2+ bits in a
+    # block are corrupted, then need to retransfer).
+    def performErrorChance(self, e):
+        return true
 
     # Calculate number of bits needed for HSBC and CRC
+    # @return : Sum of HSBC bits + CRC length
     def getWastedData(self):
         total = self.CRC
         
