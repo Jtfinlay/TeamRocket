@@ -5,7 +5,7 @@ class Frame:
     
     F = 0
     blocks = []
-    CRC = 0 ## TODO - Calculate size of CRC
+    CRC = 32
     
     
     # Constructor
@@ -24,8 +24,11 @@ class Frame:
     #
     # @return: bool indicating whether transmission successful. (If 2+ bits in a
     # block are corrupted, then need to retransfer).
-    def performErrorChance(self, e):
-        return true
+    def performErrorChance(self, error_chance):
+        for block in self.blocks:
+            if not block.performErrorChance(error_chance):
+                return False
+        return True
 
     # Calculate number of bits needed for HSBC and CRC
     # @return : Sum of HSBC bits + CRC length

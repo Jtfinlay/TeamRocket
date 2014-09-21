@@ -24,5 +24,17 @@ def main(A, K, F, e, R, T):
     print "Amount of wasted bits:"
     print f.getWastedData()
 
+    # Calculate total time w/ feedback
+    elapsed_time = 0
+    while True:
+        elapsed_time += A
+
+        if f.performErrorChance(e):
+            break;
+
+    print "Elapsed time:"
+    print elapsed_time
+
+
 
 main(500, 4, 4000, .005, 100, [5, 100, 3, 5, 2, 8]);
