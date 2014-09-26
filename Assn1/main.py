@@ -21,6 +21,7 @@ def main(A, K, F, e, R, T):
 
     _transmissionsTotal = 0
     _transmissionsCorrect = 0
+    _totalTime = 0
     
     for trial in range(T[0]):
         # TODO - Seeding
@@ -28,6 +29,7 @@ def main(A, K, F, e, R, T):
     
         _transmissionsTotal += frames_total
         _transmissionsCorrect += frames_correct
+        _totalTime += elapsed_time
     
         # Output
         print "---------------------"
@@ -39,9 +41,10 @@ def main(A, K, F, e, R, T):
     print "---------------------"    
     # Output - what's actually expected
     print A,K,F,e,R,T
-    print (_transmissionsTotal / T[0])/(_transmissionsCorrect / T[0])
+    print (_transmissionsTotal / T[0])/(_transmissionsCorrect / T[0]), "conf"
+    print (_transmissionsCorrect / T[0]) / (elapsed_time / T[0]), "conf"
     
-    # TODO - Confidence intervals & throughput
+    # TODO - Confidence intervals
 
 # Executes transmissions over given period of time.
 #
