@@ -17,6 +17,7 @@ class Frame:
         
         # Create blocks
         block_length = F/K
+        self.blocks = []
         for i in range(K):
             self.blocks.append(Block.Block(block_length));
 
@@ -24,9 +25,9 @@ class Frame:
     #
     # @return: bool indicating whether transmission successful. (If 2+ bits in
     # a block are corrupted, then need to retransfer).
-    def performErrorChance(self, error_chance):
+    def performErrorChance(self, error_chance, rnd):
         for block in self.blocks:
-            if not block.performErrorChance(error_chance):
+            if not block.performErrorChance(error_chance, rnd):
                 return False
         return True
 
