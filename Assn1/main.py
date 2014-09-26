@@ -19,22 +19,55 @@ import random
 # @param T: Number of trials, followed by seeds for the trials
 def main(A, K, F, e, R, T):
 
+    _transmissionsTotal = 0
+    _transmissionsCorrect = 0
+    
+    for trial in range(T[0]):
+        # TODO - Seeding
+        [elapsed_time, frames_total, frames_correct] = performTransmissions(A,K,F,e,R)
+    
+        _transmissionsTotal += frames_total
+        _transmissionsCorrect += frames_correct
+    
+        # Output
+        print "---------------------"
+        print "Trial", trial
+        print "Elapsed time:", elapsed_time
+        print "Total frames:", frames_total
+        print "Correct frames:", frames_correct
+    
+    print "---------------------"    
+    # Output - what's actually expected
+    print A,K,F,e,R,T
+    print (_transmissionsTotal / T[0])/(_transmissionsCorrect / T[0])
+    
+    # TODO - Confidence intervals & throughput
+
+# Executes transmissions over given period of time.
+#
+# @param A: You can assume the feedback time is 500 bit time units.
+# @param K: The number of blocks.
+# @param F: Size of the frame in number of bits. Assume 4000 bits.
+# @param e: Probability that bit is in error
+# @param R: Length of simulation in bit time units.
+#
+# @returns Elapsed Time, Total Frames sent, Total Correct Frames sent
+def performTransmissions(A, K, F, e, R):
+    
     f = Frame.Frame(K, F);
-
-    print "Amount of wasted bits:"
-    print f.getWastedData()
-
-    # Calculate total time w/ feedback
+    
     elapsed_time = 0
-    while True:
+    frames_total = 0
+    frames_correct = 0
+    
+    while elapsed_time < R:
         elapsed_time += A
+        frames_total += 1
 
         if f.performErrorChance(e):
-            break;
+            # Successful transmission
+            frames_correct += 1
+    
+    return [elapsed_time, frames_total, frames_correct]
 
-    print "Elapsed time:"
-    print elapsed_time
-
-
-
-main(500, 4, 4000, .005, 100, [5, 100, 3, 5, 2, 8]);
+main(500, 4, 4000, .005, 5000, [5, 100, 3, 5, 2, 8]);

@@ -22,8 +22,8 @@ class Frame:
 
     # Checks probability of error on every bit.
     #
-    # @return: bool indicating whether transmission successful. (If 2+ bits in a
-    # block are corrupted, then need to retransfer).
+    # @return: bool indicating whether transmission successful. (If 2+ bits in
+    # a block are corrupted, then need to retransfer).
     def performErrorChance(self, error_chance):
         for block in self.blocks:
             if not block.performErrorChance(error_chance):
