@@ -2,24 +2,29 @@ import Block
 
 # Frame object holds the blocks and frame information.
 class Frame:
-    
+
     F = 0
     blocks = []
     CRC = 32
-    
-    
+
+
     # Constructor
     #
     # @param K: The number of blocks
     # @param F: Size of the frame in number of bits.
     def __init__(self, K, F):
         self.F = F
-        
+
         # Create blocks
+        useErrorCorrection = True
+        if K == 0:
+            useErrorCorrection = False
+            K = 1
+
         block_length = F/K
         self.blocks = []
         for i in range(K):
-            self.blocks.append(Block.Block(block_length));
+            self.blocks.append(Block.Block(block_length, useErrorCorrection));
 
     # Checks probability of error on every bit.
     #
@@ -35,7 +40,7 @@ class Frame:
     # @return : Sum of HSBC bits + CRC length
     def getWastedData(self):
         total = self.CRC
-        
+
         for block in self.blocks:
             total += block.HSBC
 
