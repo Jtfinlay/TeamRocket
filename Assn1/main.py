@@ -6,6 +6,7 @@
 #
 
 import Frame
+import math
 import random
 
 # Runs simple simulator to investigate the impact of error-correction encoding
@@ -22,41 +23,65 @@ def main(A, K, F, e, R, T):
     _transmissionsTotal = 0
     _transmissionsCorrect = 0
     _totalTime = 0
-    
+
     _trialNumber = 1
-    
+
+    _throughputResults = []
+    _averageTransmissions = []
+
     for trial in range(T[0]):
-        
+
         rnd = random.Random()
         if _trialNumber < len(T):
             rnd.seed(T[_trialNumber])
         else:
             rnd.seed()
-        
+
         [elapsed_time, frames_total, frames_correct] = performTransmissions(A,K,F,e,R, rnd)
-    
+
         _transmissionsTotal += frames_total
         _transmissionsCorrect += frames_correct
         _totalTime += elapsed_time
-    
+
         # Output
         print "---------------------"
         print "Trial", trial
         print "Elapsed time:", elapsed_time
         print "Total frames:", frames_total
         print "Correct frames:", frames_correct
-    
+
+        _throughputResults.append(frames_correct * F / float(R))
+        _averageTransmissions.append(frames_total / float(frames_correct))
+
         _trialNumber = _trialNumber + 1
-    print "---------------------"    
+
+    t_value = 2.776 # this corresponds to a 95% confidence interval
+
+    throughput_mean = sum(_throughputResults) / float(T[0])
+    throughput_stdDev = calcStandardDeviation(_throughputResults, throughput_mean)
+    throughput_leftInverval = throughput_mean - t_value * throughput_stdDev / math.sqrt(T[0])
+    throughput_rightInverval = throughput_mean + t_value * throughput_stdDev / math.sqrt(T[0])
+
+    averageTransmissions_mean = sum(_averageTransmissions) / float(T[0])
+    averageTransmissions_stdDev = calcStandardDeviation(_averageTransmissions, averageTransmissions_mean)
+    averageTransmissions_leftInverval = averageTransmissions_mean - t_value * averageTransmissions_stdDev / math.sqrt(T[0])
+    averageTransmissions_rightInverval = averageTransmissions_mean + t_value * averageTransmissions_stdDev / math.sqrt(T[0])
+
+    print "\n---------------------\n"
     # Output - what's actually expected
-    print A,K,F,e,R,T
-    if _transmissionsCorrect / T[0] != 0:
-        print (_transmissionsTotal / T[0])/(_transmissionsCorrect / T[0]), "conf"
-    else:
-        print "No successful transmissions!"
-    print (_transmissionsCorrect / T[0]) / (elapsed_time / T[0]), "conf"
-    
+    print A,K,F,e,R,T, "\n"
+    print "An average of " + str(averageTransmissions_mean) + " transmissions were needed per frame with a 95% confidence interval of : [" + str(averageTransmissions_leftInverval) + "," + str(averageTransmissions_rightInverval) + "]"
+    print "An average throughput of " + str(throughput_mean) + " bits/time_unit was achieved during the trial with a 95% confidence interval of : [" + str(throughput_leftInverval) + "," + str(throughput_rightInverval) + "]"
+
     # TODO - Confidence intervals
+
+def calcStandardDeviation(arr, mean):
+    result = 0
+    for val in arr:
+        result += (val - mean) * (val - mean)
+
+    result = math.sqrt(result / (len(arr) - 1))
+    return result
 
 # Executes transmissions over given period of time.
 #
@@ -69,13 +94,13 @@ def main(A, K, F, e, R, T):
 #
 # @returns Elapsed Time, Total Frames sent, Total Correct Frames sent
 def performTransmissions(A, K, F, e, R, rnd):
-    
+
     f = Frame.Frame(K, F);
-    
+
     elapsed_time = 0
     frames_total = 0
     frames_correct = 0
-    
+
     while elapsed_time < R:
         elapsed_time += A
         frames_total += 1
@@ -83,7 +108,7 @@ def performTransmissions(A, K, F, e, R, rnd):
         if f.performErrorChance(e, rnd):
             # Successful transmission
             frames_correct += 1
-    
+
     return [elapsed_time, frames_total, frames_correct]
 
-main(50, 4, 4000, .00005, 5000, [500, 100, 3, 5, 2, 8]);
+main(50, 4, 4000, .0005, 5000, [50, 100, 3, 5, 2, 8]);
