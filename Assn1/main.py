@@ -8,6 +8,7 @@
 import Frame
 import math
 import random
+import sys
 
 # Runs simple simulator to investigate the impact of error-correction encoding
 # on the throughput of a communication channel.
@@ -44,14 +45,15 @@ def main(A, K, F, e, R, T):
         _totalTime += elapsed_time
 
         # Output
-        print "---------------------"
-        print "Trial", trial
-        print "Elapsed time:", elapsed_time
-        print "Total frames:", frames_total
-        print "Correct frames:", frames_correct
+        #print "---------------------"
+        #print "Trial", trial
+        #print "Elapsed time:", elapsed_time
+        #print "Total frames:", frames_total
+        #print "Correct frames:", frames_correct
 
         _throughputResults.append(frames_correct * F / float(R))
-        _averageTransmissions.append(frames_total / float(frames_correct))
+        if frames_correct > 0:
+            _averageTransmissions.append(frames_total / float(frames_correct))
 
         _trialNumber = _trialNumber + 1
 
@@ -72,8 +74,6 @@ def main(A, K, F, e, R, T):
     print A,K,F,e,R,T, "\n"
     print "An average of " + str(averageTransmissions_mean) + " transmissions were needed per frame with a 95% confidence interval of : [" + str(averageTransmissions_leftInverval) + "," + str(averageTransmissions_rightInverval) + "]"
     print "An average throughput of " + str(throughput_mean) + " bits/time_unit was achieved during the trial with a 95% confidence interval of : [" + str(throughput_leftInverval) + "," + str(throughput_rightInverval) + "]"
-
-    # TODO - Confidence intervals
 
 def calcStandardDeviation(arr, mean):
     result = 0
@@ -111,4 +111,17 @@ def performTransmissions(A, K, F, e, R, rnd):
 
     return [elapsed_time, frames_total, frames_correct]
 
-main(50, 4, 4000, .0005, 5000, [50, 100, 3, 5, 2, 8]);
+if(len(sys.argv) > 6):
+
+    A = int(sys.argv[1])
+    K = int(sys.argv[2])
+    F = int(sys.argv[3])
+    e = float(sys.argv[4])
+    R = int(sys.argv[5])
+
+    T = map(int, sys.argv[6:])
+
+    main(A, K, F, e, R, T);
+else:
+    print "Invalid Arguments passed in! Please pass in the format :"
+    print "<FeedbackTime> <Number of Blocks> <Size of frame in bits> <probability of failure> <Length of simulation> <Number of Trials> <seed for trial 1> <seed for trial 2> ... <seed for trial N"
