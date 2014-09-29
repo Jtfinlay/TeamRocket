@@ -102,7 +102,7 @@ def performTransmissions(A, K, F, e, R, rnd):
     frames_correct = 0
 
     while elapsed_time < R:
-        elapsed_time += A
+        elapsed_time += A + F # transmission time is the feedback time + 1 time unit per bit
         frames_total += 1
 
         if f.performErrorChance(e, rnd):
