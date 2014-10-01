@@ -216,7 +216,7 @@ namespace AutoSimulator
 
 #region Tests
 
-#region Varying Blocksize > 1
+#region Varying Block-size > 1
 		static void TestBlockSizeGreaterThanOne()
 		{
 			const int START_BLOCK_COUNT = 1;
