@@ -142,23 +142,23 @@ namespace AutoSimulator
 
 		static void Main(string[] args)
 		{
-			/*
+			
 			var t1 = Task.Factory.StartNew(() =>
 			{
 				TestBlockSizeGreaterThanOne();
-			});*/
+			});
 			var t2 = Task.Factory.StartNew(() =>
 			{
 				TestBlockSizeZeroAndOne();
 			});
-			/*var t3 = Task.Factory.StartNew(() =>
+			var t3 = Task.Factory.StartNew(() =>
 			{
 				TestThroughputWithRespectToProbability();
-			});*/
+			});
 
-			//t1.Wait();
+			t1.Wait();
 			t2.Wait();
-			//t3.Wait();
+			t3.Wait();
 		}
 
 		static void OutputResults(String fileName, string paramName, List<TestResults> results)
@@ -247,7 +247,7 @@ namespace AutoSimulator
 		static void TestBlockSizeGreaterThanOne()
 		{
 			const int START_BLOCK_COUNT = 1;
-			const int END_BLOCK_COUNT = 20;
+			const int END_BLOCK_COUNT = 100;
 			const int BLOCK_COUNT_STEP = 1;
 
 			const int FEEDBACK_TIME = 500;
@@ -261,9 +261,13 @@ namespace AutoSimulator
 
 			for(int blockCount = START_BLOCK_COUNT; blockCount < END_BLOCK_COUNT ; blockCount += BLOCK_COUNT_STEP)
 			{
-				var res = RunTest(FEEDBACK_TIME, blockCount, FRAME_SIZE, PROBABILITY, SIMULATION_TIME, TRIALS, SEEDS);
-				res.TestParam = blockCount;
-				results.Add(res);
+				if(FRAME_SIZE % blockCount == 0)
+				{
+
+					var res = RunTest(FEEDBACK_TIME, blockCount, FRAME_SIZE, PROBABILITY, SIMULATION_TIME, TRIALS, SEEDS);
+					res.TestParam = blockCount;
+					results.Add(res);
+				}
 			}
 
 			OutputResults("test_blockSizeGreaterThanOne", "BlockCount", results);
@@ -274,10 +278,10 @@ namespace AutoSimulator
 		static void TestBlockSizeZeroAndOne()
 		{
 			const int ZERO_BLOCK_SIZE = 0;
-			const int ONE_BLOCK_SIZE = 0;
+			const int ONE_BLOCK_SIZE = 1;
 
-			const float PROBABILITY_START = 0.005F;
-			const float PROBABILITY_END = 0.0005F;
+			const float PROBABILITY_START = 0.000500F;
+			const float PROBABILITY_END =	0.000005F;
 			const float PROBABILITY_STEP = (PROBABILITY_START - PROBABILITY_END) / 100;
 
 			const int FEEDBACK_TIME = 500;
@@ -296,6 +300,7 @@ namespace AutoSimulator
 			}
 
 			OutputResults("test_blockSizeZero", "probability", results);
+			results = new List<TestResults>();
 
 			for (float probability = PROBABILITY_START; probability > PROBABILITY_END; probability -= PROBABILITY_STEP)
 			{
@@ -313,13 +318,13 @@ namespace AutoSimulator
 		{	
 			const float PROBABILITY_START = 0.001500F;
 			const float PROBABILITY_END =	0.000005F;
-			const float PROBABILITY_STEP = (PROBABILITY_START - PROBABILITY_END) / 25;
+			const float PROBABILITY_STEP = (PROBABILITY_START - PROBABILITY_END) / 100;
 
 			const int BLOCK_SIZE = 4;
 			const int FEEDBACK_TIME = 500;
 			const int FRAME_SIZE = 4000;
 			const int SIMULATION_TIME = 50000;
-			const int TRIALS = 50;
+			const int TRIALS = 500;
 			List<int> SEEDS = Enumerable.Range(0, TRIALS).ToList<int>();
 
 			List<TestResults> results = new List<TestResults>();
