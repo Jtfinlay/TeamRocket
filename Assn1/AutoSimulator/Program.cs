@@ -143,21 +143,21 @@ namespace AutoSimulator
 		static void Main(string[] args)
 		{
 			
-			/*var t1 = Task.Factory.StartNew(() =>
+			var t1 = Task.Factory.StartNew(() =>
 			{
 				TestBlockSizeGreaterThanOne();
-			});*/
-			var t2 = Task.Factory.StartNew(() =>
+			});
+			/*var t2 = Task.Factory.StartNew(() =>
 			{
 				TestBlockSizeZeroAndOne();
-			});
+			});*/
 			/*var t3 = Task.Factory.StartNew(() =>
 			{
 				TestThroughputWithRespectToProbability();
 			});*/
 
-			//t1.Wait();
-			t2.Wait();
+			t1.Wait();
+			//t2.Wait();
 			//t3.Wait();
 		}
 
@@ -247,7 +247,7 @@ namespace AutoSimulator
 		static void TestBlockSizeGreaterThanOne()
 		{
 			const int START_BLOCK_COUNT = 1;
-			const int END_BLOCK_COUNT = 100;
+			const int END_BLOCK_COUNT = 500;
 			const int BLOCK_COUNT_STEP = 1;
 
 			const int FEEDBACK_TIME = 500;
