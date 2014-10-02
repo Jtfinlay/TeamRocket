@@ -143,22 +143,22 @@ namespace AutoSimulator
 		static void Main(string[] args)
 		{
 			
-			var t1 = Task.Factory.StartNew(() =>
+			/*var t1 = Task.Factory.StartNew(() =>
 			{
 				TestBlockSizeGreaterThanOne();
-			});
+			});*/
 			var t2 = Task.Factory.StartNew(() =>
 			{
 				TestBlockSizeZeroAndOne();
 			});
-			var t3 = Task.Factory.StartNew(() =>
+			/*var t3 = Task.Factory.StartNew(() =>
 			{
 				TestThroughputWithRespectToProbability();
-			});
+			});*/
 
-			t1.Wait();
+			//t1.Wait();
 			t2.Wait();
-			t3.Wait();
+			//t3.Wait();
 		}
 
 		static void OutputResults(String fileName, string paramName, List<TestResults> results)
@@ -282,12 +282,12 @@ namespace AutoSimulator
 
 			const float PROBABILITY_START = 0.000500F;
 			const float PROBABILITY_END =	0.000005F;
-			const float PROBABILITY_STEP = (PROBABILITY_START - PROBABILITY_END) / 100;
+			const float PROBABILITY_STEP = (PROBABILITY_START - PROBABILITY_END) / 50;
 
 			const int FEEDBACK_TIME = 500;
 			const int FRAME_SIZE = 4000;
 			const int SIMULATION_TIME = 50000;
-			const int TRIALS = 500;
+			const int TRIALS = 300;
 			List<int> SEEDS = Enumerable.Range(0, TRIALS).ToList<int>();
 
 			List<TestResults> results = new List<TestResults>();
@@ -310,6 +310,26 @@ namespace AutoSimulator
 			}
 
 			OutputResults("test_blockSizeOne", "probability", results);
+			results = new List<TestResults>();
+
+			for (float probability = PROBABILITY_START; probability > PROBABILITY_END; probability -= PROBABILITY_STEP)
+			{
+				var res = RunTest(FEEDBACK_TIME, 20, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS);
+				res.TestParam = probability;
+				results.Add(res);
+			}
+
+			OutputResults("test_blockSizeTwenty", "probability", results);
+			results = new List<TestResults>();
+
+			for (float probability = PROBABILITY_START; probability > PROBABILITY_END; probability -= PROBABILITY_STEP)
+			{
+				var res = RunTest(FEEDBACK_TIME, 80, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS);
+				res.TestParam = probability;
+				results.Add(res);
+			}
+
+			OutputResults("test_blockSizeEighty", "probability", results);
 		}
 		#endregion
 
