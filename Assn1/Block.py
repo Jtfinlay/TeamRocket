@@ -1,3 +1,4 @@
+import math
 
 # Block objects represent the different blocks in a frame.
 class Block:
@@ -13,7 +14,7 @@ class Block:
 
         # Calculate HSBC
         # self.HSBC = len("{0:b}".format(l)) if l > 0 else 0
-        self.HSBC = calcHSBC(l)
+        self.HSBC = self.calcHSBC(l)
         self.length = l
         self.errorLimit = (2 if useErrorCorrection else 1)
 
@@ -28,7 +29,7 @@ class Block:
 
         return True
 
-    def calcHSBC(l):
+    def calcHSBC(self, l):
         Ham = 0
         while l > math.pow(2,Ham)-Ham-1:
             Ham+=1

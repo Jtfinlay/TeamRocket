@@ -105,7 +105,7 @@ def performTransmissions(A, K, F, e, R, rnd):
 
     while elapsed_time < R:
         # transmission time is the feedback time + 1 time unit per bit
-        elapsed_time += A + F + F.getWastedData()
+        elapsed_time += A + F + f.getWastedData()
         frames_total += 1
 
         if f.performErrorChance(e, rnd):
