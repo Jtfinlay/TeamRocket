@@ -12,6 +12,8 @@ namespace AutoSimulator
 {
 	class TestResults
 	{
+		public float TestParam { get; set; }
+
 		public float Throughput { get; set; }
 		public float Throughput_leftInterval { get; set; }
 		public float Throughput_rightInverval { get; set; }
@@ -140,33 +142,36 @@ namespace AutoSimulator
 
 		static void Main(string[] args)
 		{
+			/*
 			var t1 = Task.Factory.StartNew(() =>
 			{
 				TestBlockSizeGreaterThanOne();
-			});
+			});*/
 			var t2 = Task.Factory.StartNew(() =>
 			{
 				TestBlockSizeZeroAndOne();
 			});
-			var t3 = Task.Factory.StartNew(() =>
+			/*var t3 = Task.Factory.StartNew(() =>
 			{
 				TestThroughputWithRespectToProbability();
-			});
+			});*/
 
-			t1.Wait();
+			//t1.Wait();
 			t2.Wait();
-			t3.Wait();
+			//t3.Wait();
 		}
 
-		static void OutputResults(String fileName, List<TestResults> results)
+		static void OutputResults(String fileName, string paramName, List<TestResults> results)
 		{
-			const int Throughput_col = 1;
-			const int Throughput_left_col = 2;
-			const int Throughput_right_col = 3;
+			const int Param_col = 1;
 
-			const int averageTransmissions_col = 5;
-			const int averageTransmissions_left_col = 6;
-			const int averageTransmissions_right_col = 7;
+			const int Throughput_col = 3;
+			const int Throughput_left_col = 4;
+			const int Throughput_right_col = 5;
+
+			const int averageTransmissions_col = 7;
+			const int averageTransmissions_left_col = 8;
+			const int averageTransmissions_right_col = 9;
 
 			Excel.Application xlApp = new Excel.Application();
 			Excel.Workbook xlWorkBook = xlApp.Workbooks.Add();
@@ -175,8 +180,12 @@ namespace AutoSimulator
 			xlApp.DisplayAlerts = false;
 			xlApp.AlertBeforeOverwriting = false;
 
+			results.Sort((left, right) =>  left.TestParam.CompareTo(right.TestParam) );
+
 			// first write in the headers
 			{
+				xlWorkSheet.Cells[1, Param_col] = paramName;
+
 				xlWorkSheet.Cells[1, Throughput_col] = "Throughput";
 				xlWorkSheet.Cells[1, Throughput_left_col] = "Throughput Left Interval";
 				xlWorkSheet.Cells[1, Throughput_right_col] = "Throughput Right Interval";
@@ -190,6 +199,8 @@ namespace AutoSimulator
 			int rowNum = 2;
 			foreach (var res in results)
 			{
+				xlWorkSheet.Cells[rowNum, Param_col] = res.TestParam;
+
 				xlWorkSheet.Cells[rowNum, Throughput_col] = res.Throughput;
 				xlWorkSheet.Cells[rowNum, Throughput_left_col] = res.Throughput_leftInterval;
 				xlWorkSheet.Cells[rowNum, Throughput_right_col] = res.Throughput_rightInverval;
@@ -250,10 +261,12 @@ namespace AutoSimulator
 
 			for(int blockCount = START_BLOCK_COUNT; blockCount < END_BLOCK_COUNT ; blockCount += BLOCK_COUNT_STEP)
 			{
-				results.Add(RunTest(FEEDBACK_TIME, blockCount, FRAME_SIZE, PROBABILITY, SIMULATION_TIME, TRIALS, SEEDS));
+				var res = RunTest(FEEDBACK_TIME, blockCount, FRAME_SIZE, PROBABILITY, SIMULATION_TIME, TRIALS, SEEDS);
+				res.TestParam = blockCount;
+				results.Add(res);
 			}
 
-			OutputResults("test_blockSizeGreaterThanOne", results);
+			OutputResults("test_blockSizeGreaterThanOne", "BlockCount", results);
 		}
 #endregion
 
@@ -277,42 +290,48 @@ namespace AutoSimulator
 
 			for (float probability = PROBABILITY_START; probability > PROBABILITY_END; probability -= PROBABILITY_STEP)
 			{
-				results.Add(RunTest(FEEDBACK_TIME, ZERO_BLOCK_SIZE, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS));
+				var res = RunTest(FEEDBACK_TIME, ZERO_BLOCK_SIZE, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS);
+				res.TestParam = probability;
+				results.Add(res);
 			}
 
-			OutputResults("test_blockSizeZero", results);
+			OutputResults("test_blockSizeZero", "probability", results);
 
 			for (float probability = PROBABILITY_START; probability > PROBABILITY_END; probability -= PROBABILITY_STEP)
 			{
-				results.Add(RunTest(FEEDBACK_TIME, ONE_BLOCK_SIZE, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS));
+				var res = RunTest(FEEDBACK_TIME, ONE_BLOCK_SIZE, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS);
+				res.TestParam = probability;
+				results.Add(res);
 			}
 
-			OutputResults("test_blockSizeOne", results);
+			OutputResults("test_blockSizeOne", "probability", results);
 		}
 		#endregion
 
 		#region Compare block size zero and one
 		static void TestThroughputWithRespectToProbability()
 		{	
-			const float PROBABILITY_START = 0.005F;
-			const float PROBABILITY_END = 0.0005F;
-			const float PROBABILITY_STEP = (PROBABILITY_START - PROBABILITY_END) / 10;
+			const float PROBABILITY_START = 0.001500F;
+			const float PROBABILITY_END =	0.000005F;
+			const float PROBABILITY_STEP = (PROBABILITY_START - PROBABILITY_END) / 25;
 
 			const int BLOCK_SIZE = 4;
 			const int FEEDBACK_TIME = 500;
 			const int FRAME_SIZE = 4000;
 			const int SIMULATION_TIME = 50000;
-			const int TRIALS = 500;
+			const int TRIALS = 50;
 			List<int> SEEDS = Enumerable.Range(0, TRIALS).ToList<int>();
 
 			List<TestResults> results = new List<TestResults>();
 
 			for (float probability = PROBABILITY_START; probability > PROBABILITY_END; probability -= PROBABILITY_STEP)
 			{
-				results.Add(RunTest(FEEDBACK_TIME, BLOCK_SIZE, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS));
+				var res = RunTest(FEEDBACK_TIME, BLOCK_SIZE, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS);
+				res.TestParam = probability;
+				results.Add(res);
 			}
 
-			OutputResults("test_throughput", results);
+			OutputResults("test_throughput", "probability", results);
 		}
 		#endregion
 
