@@ -44,13 +44,6 @@ def main(A, K, F, e, R, T):
         _transmissionsCorrect += frames_correct
         _totalTime += elapsed_time
 
-        # Output
-        #print "---------------------"
-        #print "Trial", trial
-        #print "Elapsed time:", elapsed_time
-        #print "Total frames:", frames_total
-        #print "Correct frames:", frames_correct
-
         _throughputResults.append(frames_correct * F / float(R))
         if frames_correct > 0:
             _averageTransmissions.append(frames_total / float(frames_correct))
@@ -102,7 +95,8 @@ def performTransmissions(A, K, F, e, R, rnd):
     frames_correct = 0
 
     while elapsed_time < R:
-        elapsed_time += A + F # transmission time is the feedback time + 1 time unit per bit
+        # transmission time is the feedback time + 1 time unit per bit
+        elapsed_time += A + F + F.getWastedData()
         frames_total += 1
 
         if f.performErrorChance(e, rnd):

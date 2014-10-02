@@ -12,7 +12,8 @@ class Block:
     def __init__(self, l, useErrorCorrection):
 
         # Calculate HSBC
-        self.HSBC = len("{0:b}".format(l)) if l > 0 else 0
+        # self.HSBC = len("{0:b}".format(l)) if l > 0 else 0
+        self.HSBC = calcHSBC(l)
         self.length = l
         self.errorLimit = (2 if useErrorCorrection else 1)
 
@@ -26,3 +27,11 @@ class Block:
                     return False
 
         return True
+
+    def calcHSBC(l):
+        Ham = 0
+        while l > math.pow(2,Ham)-Ham-1:
+            Ham+=1
+        return Ham
+            
+            
