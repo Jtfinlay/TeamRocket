@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Excel = Microsoft.Office.Interop.Excel;
 
 namespace AutoSimulator
@@ -59,8 +60,8 @@ namespace AutoSimulator
 			}
 		}
 
-		const  String TransmissionRegex = @"average of (?<average>\d*\.\d*) transmissions [^\[\]]*\[(?<leftInterval>\d*\.\d*),(?<rightIntverval>\d*\.\d*)\]";
-		const String ThroughputRegex = @"average throughput of (?<average>\d*\.\d*) bits/time_unit [^\[\]]*\[(?<leftInterval>\d*\.\d*),(?<rightIntverval>\d*\.\d*)\]";
+		const String TransmissionRegex = @"average of (?<average>-*\d*\.\d*\S*) transmissions [^\[\]]*\[(?<leftInterval>-*\d*\.\d*\S*),(?<rightIntverval>-*\d*\.\d*\S*)\]";
+		const String ThroughputRegex = @"average throughput of (?<average>-*\d*\.\d*\S*) bits/time_unit [^\[\]]*\[(?<leftInterval>-*\d*\.\d*\S*),(?<rightIntverval>-*\d*\.\d*\S*)\]";
 
 		static String FindPythonMain(string dir)
 		{
@@ -139,7 +140,22 @@ namespace AutoSimulator
 
 		static void Main(string[] args)
 		{
-			TestBlockSizeGreaterThanOne();
+			var t1 = Task.Factory.StartNew(() =>
+			{
+				TestBlockSizeGreaterThanOne();
+			});
+			var t2 = Task.Factory.StartNew(() =>
+			{
+				TestBlockSizeZeroAndOne();
+			});
+			var t3 = Task.Factory.StartNew(() =>
+			{
+				TestThroughputWithRespectToProbability();
+			});
+
+			t1.Wait();
+			t2.Wait();
+			t3.Wait();
 		}
 
 		static void OutputResults(String fileName, List<TestResults> results)
@@ -223,11 +239,11 @@ namespace AutoSimulator
 			const int END_BLOCK_COUNT = 20;
 			const int BLOCK_COUNT_STEP = 1;
 
-			const int FEEDBACK_TIME = 50;
+			const int FEEDBACK_TIME = 500;
 			const int FRAME_SIZE = 4000;
 			const float PROBABILITY = 0.0005F;
-			const int SIMULATION_TIME = 500;
-			const int TRIALS = 50;
+			const int SIMULATION_TIME = 50000;
+			const int TRIALS = 500;
 			List<int> SEEDS = Enumerable.Range(0, TRIALS).ToList<int>();
 
 			List<TestResults> results = new List<TestResults>();
@@ -240,6 +256,66 @@ namespace AutoSimulator
 			OutputResults("test_blockSizeGreaterThanOne", results);
 		}
 #endregion
+
+		#region Compare block size zero and one
+		static void TestBlockSizeZeroAndOne()
+		{
+			const int ZERO_BLOCK_SIZE = 0;
+			const int ONE_BLOCK_SIZE = 0;
+
+			const float PROBABILITY_START = 0.005F;
+			const float PROBABILITY_END = 0.0005F;
+			const float PROBABILITY_STEP = (PROBABILITY_START - PROBABILITY_END) / 100;
+
+			const int FEEDBACK_TIME = 500;
+			const int FRAME_SIZE = 4000;
+			const int SIMULATION_TIME = 50000;
+			const int TRIALS = 500;
+			List<int> SEEDS = Enumerable.Range(0, TRIALS).ToList<int>();
+
+			List<TestResults> results = new List<TestResults>();
+
+			for (float probability = PROBABILITY_START; probability > PROBABILITY_END; probability -= PROBABILITY_STEP)
+			{
+				results.Add(RunTest(FEEDBACK_TIME, ZERO_BLOCK_SIZE, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS));
+			}
+
+			OutputResults("test_blockSizeZero", results);
+
+			for (float probability = PROBABILITY_START; probability > PROBABILITY_END; probability -= PROBABILITY_STEP)
+			{
+				results.Add(RunTest(FEEDBACK_TIME, ONE_BLOCK_SIZE, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS));
+			}
+
+			OutputResults("test_blockSizeOne", results);
+		}
+		#endregion
+
+		#region Compare block size zero and one
+		static void TestThroughputWithRespectToProbability()
+		{	
+			const float PROBABILITY_START = 0.005F;
+			const float PROBABILITY_END = 0.0005F;
+			const float PROBABILITY_STEP = (PROBABILITY_START - PROBABILITY_END) / 10;
+
+			const int BLOCK_SIZE = 4;
+			const int FEEDBACK_TIME = 500;
+			const int FRAME_SIZE = 4000;
+			const int SIMULATION_TIME = 50000;
+			const int TRIALS = 500;
+			List<int> SEEDS = Enumerable.Range(0, TRIALS).ToList<int>();
+
+			List<TestResults> results = new List<TestResults>();
+
+			for (float probability = PROBABILITY_START; probability > PROBABILITY_END; probability -= PROBABILITY_STEP)
+			{
+				results.Add(RunTest(FEEDBACK_TIME, BLOCK_SIZE, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS));
+			}
+
+			OutputResults("test_throughput", results);
+		}
+		#endregion
+
 
 #endregion
 	}

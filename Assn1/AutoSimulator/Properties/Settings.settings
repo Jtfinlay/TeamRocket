@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="PathToPython" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">D:\Python27\python.exe</Value>
+      <Value Profile="(Default)">C:\Python27\python.exe</Value>
     </Setting>
   </Settings>
 </SettingsFile>

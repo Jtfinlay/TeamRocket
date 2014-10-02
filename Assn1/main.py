@@ -57,23 +57,32 @@ def main(A, K, F, e, R, T):
     throughput_leftInverval = throughput_mean - t_value * throughput_stdDev / math.sqrt(T[0])
     throughput_rightInverval = throughput_mean + t_value * throughput_stdDev / math.sqrt(T[0])
 
-    averageTransmissions_mean = sum(_averageTransmissions) / float(T[0])
-    averageTransmissions_stdDev = calcStandardDeviation(_averageTransmissions, averageTransmissions_mean)
-    averageTransmissions_leftInverval = averageTransmissions_mean - t_value * averageTransmissions_stdDev / math.sqrt(T[0])
-    averageTransmissions_rightInverval = averageTransmissions_mean + t_value * averageTransmissions_stdDev / math.sqrt(T[0])
+    if len(_averageTransmissions) > 0:
+        averageTransmissions_mean = sum(_averageTransmissions) / float(T[0])
+        averageTransmissions_stdDev = calcStandardDeviation(_averageTransmissions, averageTransmissions_mean)
+        averageTransmissions_leftInverval = averageTransmissions_mean - t_value * averageTransmissions_stdDev / math.sqrt(T[0])
+        averageTransmissions_rightInverval = averageTransmissions_mean + t_value * averageTransmissions_stdDev / math.sqrt(T[0])
+    else:
+        averageTransmissions_mean = 0.0
+        averageTransmissions_stdDev = 0.0
+        averageTransmissions_leftInverval = 0.0
+        averageTransmissions_rightInverval = 0.0
 
     print "\n---------------------\n"
     # Output - what's actually expected
     print A,K,F,e,R,T, "\n"
-    print "An average of " + str(averageTransmissions_mean) + " transmissions were needed per frame with a 95% confidence interval of : [" + str(averageTransmissions_leftInverval) + "," + str(averageTransmissions_rightInverval) + "]"
-    print "An average throughput of " + str(throughput_mean) + " bits/time_unit was achieved during the trial with a 95% confidence interval of : [" + str(throughput_leftInverval) + "," + str(throughput_rightInverval) + "]"
+    print "An average of " + str(float(averageTransmissions_mean)) + " transmissions were needed per frame with a 95% confidence interval of : [" + str(averageTransmissions_leftInverval) + "," + str(averageTransmissions_rightInverval) + "]"
+    print "An average throughput of " + str(float(throughput_mean)) + " bits/time_unit was achieved during the trial with a 95% confidence interval of : [" + str(throughput_leftInverval) + "," + str(throughput_rightInverval) + "]"
 
 def calcStandardDeviation(arr, mean):
     result = 0
     for val in arr:
         result += (val - mean) * (val - mean)
 
-    result = math.sqrt(result / (len(arr) - 1))
+    if len(arr) > 1:
+        result = math.sqrt(result / (len(arr) - 1))
+    else:
+        result = math.sqrt(result)
     return result
 
 # Executes transmissions over given period of time.

@@ -25,7 +25,7 @@ namespace AutoSimulator.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("D:\\Python27\\python.exe")]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\Python27\\python.exe")]
         public string PathToPython {
             get {
                 return ((string)(this["PathToPython"]));
