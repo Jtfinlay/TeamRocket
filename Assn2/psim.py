@@ -5,6 +5,8 @@
 # Author: Jesse Tucker & James Finlay
 #
 
+import Station
+
 #
 # @param Protocol:
 # 'T' - Time Division Multiplexing
@@ -16,7 +18,31 @@
 # @param R: Total number of slots to simulate
 # @param T: Number of trials, followed by seeds of file
 def psim(Protocol, N, p, R, T):
-  print "Shit goes here."
+
+
+  for trial in range(T[0]):
+
+
+
+# Time Division Multiplexing
+#
+# @param N: Number of stations
+# @param p: Frame generation probability
+# @param R: Total number of slots
+def protocol_T(N, p, R):
+  stations = [];
+  for i in range(N):
+    stations.append(Station.Station(p))
+
+  for s in range(R):
+
+    for node in stations:
+      node.generate_frame()
+
+    stations[s-(s/N)*N].transmit()
+
+
+
 
 
 
