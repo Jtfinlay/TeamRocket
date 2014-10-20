@@ -5,6 +5,8 @@
 # Author: Jesse Tucker & James Finlay
 #
 
+import random
+
 import Protocol_T
 import Protocol_P
 import Protocol_I
@@ -26,6 +28,9 @@ def psim(Protocol, N, p, R, T):
   delay_per_frame = 0
 
   for trial in range(T[0]):
+    if len(T) > trial:
+      random.seed(T[trial])
+
     prot = None
     if Protocol == 'T': prot = Protocol_T.Protocol(N,p)
     elif Protocol == 'P': prot = Protocol_P.Protocol(N,p)
