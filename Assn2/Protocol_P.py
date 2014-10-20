@@ -1,5 +1,6 @@
 
 import random
+import Frame
 
 #
 # Slotted ALOHA with probabilistic backoff
@@ -25,13 +26,13 @@ class Protocol:
       t_stations = []
 
       for i, node in enumerate(self.stations):
-        node.generate_frame()
+        node.generate_frame(s)
 
         if node.previous_collision:
-          if node.transmit(1.0/len(self.stations)):
+          if node.transmit(1.0/len(self.stations),s):
             t_stations.append(i)
         else:
-          if node.transmit(1.0):
+          if node.transmit(1.0,s):
             t_stations.append(i)
 
       if len(t_stations) > 1:
@@ -41,9 +42,8 @@ class Protocol:
 class Station:
 
   prob_generation = 0 # Probability of generating a frame
-  frames = 0 # Number of frames in queue
-  transmissions = 0 # Number of transmissions sent
-  collisions = 0 # Number of collisions
+  frames_waiting = [] # Unsent frames
+  frames_sent = [] # Sent frames
 
   previous_collision = False # if previous transmission was collision
 
@@ -54,24 +54,27 @@ class Station:
     self.prob_generation = p
 
   # Generate frame from generation probability
-  def generate_frame(self):
+  def generate_frame(self, slot):
     if random.random() <= self.prob_generation:
-      self.frames += 1
+      self.frames_waiting.append(Frame.Frame(slot))
 
   # Transmit frame
   #
   # @param prob: Probability of transmitting
-  def transmit(self, prob):
-    if self.frames > 0 and random.random() <= prob:
-      self.frames -= 1
-      self.transmissions += 1
+  # @param slot: current slot
+  def transmit(self, prob, slot):
+    if len(self.frames_waiting) > 0 and random.random() <= prob:
+      frame = self.frames_waiting.pop(0)
+      frame.transmit(slot)
+      self.frames_sent.append(frame)
       self.previous_collision = False
       return True
     else:
       return False
 
-  # Collision detected. Put frame back into queue
+  # Collision detected. Put frame back into start of queue
   def collision(self):
     self.previous_collision = True
-    self.collisions+=1
-    self.frames+=1
+    frame = self.frames_sent.pop()
+    frame.collision()
+    self.frames_waiting.insert(0,frame)

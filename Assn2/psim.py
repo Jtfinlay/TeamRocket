@@ -23,17 +23,20 @@ import Protocol_B
 def psim(Protocol, N, p, R, T):
 
 
-  # for trial in range(T[0]):
-  prot = None
-  if Protocol == 'T': prot = Protocol_T.Protocol(N,p)
-  elif Protocol == 'P': prot = Protocol_P.Protocol(N,p)
-  elif Protocol == 'I': prot = Protocol_I.Protocol(N,p)
-  elif Protocol == 'B': prot = Protocol_B.Protocol(N,p)
-  else: raise ValueError("Invalid Protocol")
+  for trial in range(T[0]):
+    prot = None
+    if Protocol == 'T': prot = Protocol_T.Protocol(N,p)
+    elif Protocol == 'P': prot = Protocol_P.Protocol(N,p)
+    elif Protocol == 'I': prot = Protocol_I.Protocol(N,p)
+    elif Protocol == 'B': prot = Protocol_B.Protocol(N,p)
+    else: raise ValueError("Invalid Protocol")
 
-  prot.run(R)
+    prot.run(R)
 
-
+  # ---- OUTPUTS ---- #
+  print Protocol,N,p,R,T[0],"\n"
+  # Average throughput followed by confidence interval
+  # Overall average per-frame delay followed by conf. int.
 
 
 psim('T', 20, .01, 50000, [5, 1,2,3,4])

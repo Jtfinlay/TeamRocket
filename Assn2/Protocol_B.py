@@ -1,6 +1,7 @@
 
 import random
 import math
+import Frame
 
 #
 # Slotted ALOHA with a binary exponential backoff
@@ -26,9 +27,9 @@ class Protocol:
       t_stations = []
 
       for i, node in enumerate(self.stations):
-        node.generate_frame()
+        node.generate_frame(s)
 
-        if node.transmit(i):
+        if node.transmit(s):
           t_stations.append(i)
 
       for i in t_stations:
@@ -40,9 +41,8 @@ class Protocol:
 class Station:
 
   prob_generation = 0
-  frames = 0 # Number of frames in queue
-  transmissions = 0 # Number of transmissions sent
-  collisions = 0 # Number of collisions
+  frames_waiting = [] # Unsent frames
+  frames_sent = [] # Sent frames
 
   prev_collisions = 0 # Number of collisions in sequence
   next_slot = 0 # Next slot to transmit on
@@ -54,19 +54,19 @@ class Station:
   def __init__(self, p):
     self.prob_generation = p
 
-
   # Genereate frame from generation probability
-  def generate_frame(self):
+  def generate_frame(self, slot):
     if random.random() <= self.prob_generation:
-      self.frames += 1
+      self.frames_waiting.append(Frame.Frame(slot))
 
   # Transmit frame
   #
   # @param slot: Current slot number
   def transmit(self, slot):
-    if self.frames > 0 and self.next_slot <= slot:
-      self.frames -= 1
-      self.transmissions += 1
+    if len(self.frames_waiting) > 0 and self.next_slot <= slot:
+      frame = self.frames_waiting.pop(0)
+      frame.transmit(slot)
+      self.frames_sent.append(frame)
       return True
     else:
       return False
@@ -78,8 +78,10 @@ class Station:
     self.prev_collisions+=1
     upper = random.randint(1, min(self.max_interval, math.pow(2,self.prev_collisions)))
     self.next_slot = slot + random.randint(1,upper)
-    self.collisions += 1
-    self.frames += 1
+
+    frame = self.frames_sent.pop()
+    frame.collision()
+    self.frames_waiting.insert(0, frame)
 
   # Successful transmission! Reset failure sequence
   def reset_collision_sequence(self):

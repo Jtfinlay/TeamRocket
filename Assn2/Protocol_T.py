@@ -1,5 +1,6 @@
 
 import random
+import Frame
 
 #
 # Time Division Multiplexing
@@ -25,15 +26,15 @@ class Protocol:
     for s in range(R):
 
       for node in self.stations:
-        node.generate_frame()
+        node.generate_frame(s)
 
-      self.stations[s-(s/len(self.stations))*len(self.stations)].transmit()
+      self.stations[s-(s/len(self.stations))*len(self.stations)].transmit(s)
 
 class Station:
 
   prob_generation = 0
-  frames = 0 # Number of frames in queue
-  transmissions = 0 # Number of transmissions sent
+  frames_waiting = [] # Unsent frames
+  frames_sent = [] # Sent frames
   collisions = 0 # Number of collisions
 
   # Constructor
@@ -43,17 +44,20 @@ class Station:
     self.prob_generation = p
 
   # Generate frame from generation probability
-  def generate_frame(self):
+  #
+  # @param slot: current slot
+  def generate_frame(self, slot):
     if random.random() <= self.prob_generation:
-      self.frames+=1
+      self.frames_waiting.append(Frame.Frame(slot))
 
   # Transmit frame
   #
-  # @param prob: Probability of transmitting
-  def transmit(self):
-    if self.frames > 0:
-      self.frames-=1
-      self.transmissions+=1
+  # @param slot: current slot
+  def transmit(self, slot):
+    if len(self.frames_waiting) > 0:
+      frame = self.frames_waiting.pop(0)
+      frame.transmit(slot)
+      self.frames_sent.append(frame)
       return True
     else:
       return False
