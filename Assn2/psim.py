@@ -28,8 +28,8 @@ def psim(Protocol, N, p, R, T):
   delay_per_frame = 0
 
   for trial in range(T[0]):
-    if len(T) > trial:
-      random.seed(T[trial])
+    if len(T) > trial + 1:
+      random.seed(T[trial + 1])
 
     prot = None
     if Protocol == 'T': prot = Protocol_T.Protocol(N,p)
