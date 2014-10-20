@@ -2,9 +2,11 @@
 # Station objects holds station/node info
 class Station:
 
-  prob_generation = 0
-  frames = 0
-  transmissions = 0
+  prob_generation = 0  # Probability of generating a frame
+  frames = 0  # Number of frames in queue
+  transmissions = 0  # Number of transmissions sent
+  collisions = 0 # Number of collisions
+  previous_collision = False  # If previous transmission was collision
 
   # Constructor
   #
@@ -18,10 +20,19 @@ class Station:
       frames++
 
   # Transmit frame
-  def transmit(self):
-    if len(frame) > 0:
-      frames--
-      transmissions++
+  #
+  # @param prob: Probability of transmitting
+  def transmit(self, prob):
+    if len(frame) > 0 && random.random() <= prob:
+      self.frames--
+      self.transmissions++
+      self.previous_collision = False
       return true
     else:
       return false
+
+  # Collision detected. Put frame back into queue.
+  def collision(self):
+    self.previous_collision = True
+    self.frames++
+    self.collisions++

@@ -30,6 +30,7 @@ def psim(Protocol, N, p, R, T):
 # @param p: Frame generation probability
 # @param R: Total number of slots
 def protocol_T(N, p, R):
+
   stations = [];
   for i in range(N):
     stations.append(Station.Station(p))
@@ -37,9 +38,43 @@ def protocol_T(N, p, R):
   for s in range(R):
 
     for node in stations:
+      # each node tries to generate a frame
       node.generate_frame()
 
-    stations[s-(s/N)*N].transmit()
+    # transmit appropriate node
+    stations[s-(s/N)*N].transmit(1.0)
+
+# Slotted ALOHA with probabilistic backoff
+#
+# @param N: Number of stations
+# @param p: Frame generation probability
+# @param R: Total number of slots
+def protocol_P(N, p, R):
+
+  stations = [];
+  for i in range(N):
+    stations.append(Station.Station(p))
+
+  for s in range(R):
+    transmissions = [] # Keep track of transmitting nodes
+
+    for i, node in enumerate(stations):
+
+      # each node tries to generate a frame
+      node.generate_frame()
+
+      # every node might try to transmit
+      if (node.previous_collision):
+        if node.transmit(1.0/N):
+          transmissions.append(i)
+      else:
+        if node.transmit(1.0):
+          transmissions.append(i)
+
+    # if collision, let the nodes know
+    if len(transmissions) > 1:
+      for index in transmissions:
+        stations[i].collision()
 
 
 
