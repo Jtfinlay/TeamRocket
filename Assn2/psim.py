@@ -24,25 +24,6 @@ def psim(Protocol, N, p, R, T):
 
 
 
-# Time Division Multiplexing
-#
-# @param N: Number of stations
-# @param p: Frame generation probability
-# @param R: Total number of slots
-def protocol_T(N, p, R):
-
-  stations = [];
-  for i in range(N):
-    stations.append(Station.Station(p))
-
-  for s in range(R):
-
-    for node in stations:
-      # each node tries to generate a frame
-      node.generate_frame()
-
-    # transmit appropriate node
-    stations[s-(s/N)*N].transmit(1.0)
 
 # Slotted ALOHA with probabilistic backoff
 #
@@ -76,7 +57,18 @@ def protocol_P(N, p, R):
       for index in transmissions:
         stations[i].collision()
 
+# Slotted ALOHA with interval-based backoff
+#
+# @param N: Number of stations
+# @param p: Frame generation probability
+# @param R: Total number of slots
+def protocol_I(N, p, R):
 
+  stations = [];
+  for i in range(N):
+    stations.append(Station.Station(p))
+
+  for s in range(R):
 
 
 
