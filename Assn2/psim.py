@@ -34,19 +34,22 @@ def psim(Protocol, N, p, R, T):
     else: raise ValueError("Invalid Protocol")
 
     prot.run(R)
-    throughput += prot.getTransmittedFrameCount()/R
+    print "throughput: ",float(prot.getTransmittedFrameCount())/R
+    throughput += float(prot.getTransmittedFrameCount()) / R
     delay_per_frame += prot.getTransmissionDelays()
 
-  throughput /= T[0]
-  delay_per_frame /= T[0]
+  throughput /= float(T[0])
+  delay_per_frame /= float(T[0])
 
   # ---- OUTPUTS ---- #
   print Protocol,N,p,R,T[0],"\n"
   # Average throughput followed by confidence interval
+  print throughput,"\n"
   # Overall average per-frame delay followed by conf. int.
+  print delay_per_frame,"\n"
 
 
-psim('T', 20, .01, 50000, [5, 1,2,3,4])
-psim('P', 20, .01, 50000, [5, 1,2,3,4])
-psim('I', 20, .01, 50000, [5, 1,2,3,4])
-psim('B', 20, .01, 50000, [5, 1,2,3,4])
+psim('T', 20, .01, 50000, [5, 1,2,3,4,5])
+psim('P', 20, .01, 50000, [5, 1,2,3,4,5])
+psim('I', 20, .01, 50000, [5, 1,2,3,4,5])
+psim('B', 20, .01, 50000, [5, 1,2,3,4,5])

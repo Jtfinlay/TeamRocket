@@ -7,13 +7,12 @@ import Frame
 #
 class Protocol:
 
-  stations = []
-
   # Constructor
   #
   # @param N: Number of stations
   # @param p: Frame generation probability
   def __init__(self, N, p):
+    self.stations = []
     for i in range(N):
       self.stations.append(Station(p))
 
@@ -28,7 +27,7 @@ class Protocol:
       for i, node in enumerate(self.stations):
         node.generate_frame(s)
 
-        if node.previous_collision && node.transmit(1.0/len(self.stations),s):
+        if node.previous_collision and node.transmit(1.0/len(self.stations),s):
             t_stations.append(i)
         elif node.transmit(1.0,s):
             t_stations.append(i)
@@ -47,23 +46,22 @@ class Protocol:
   # Get sum of delays / transmitted frame count
   def getTransmissionDelays(self):
     result = 0
+    transmissions = self.getTransmittedFrameCount()
     for node in self.stations:
       result += node.getTransmissionDelays()
-    return result / self.getTransmittedFrameCount()
+    return float(result) / transmissions if transmissions > 0 else 0
 
 class Station:
-
-  prob_generation = 0 # Probability of generating a frame
-  frames_waiting = [] # Unsent frames
-  frames_sent = [] # Sent frames
-
-  previous_collision = False # if previous transmission was collision
 
   # Constructor
   #
   # @param p: Frame generation probability
   def __init__(self, p):
     self.prob_generation = p
+    self.frames_waiting = [] # Unsent frames
+    self.frames_sent = [] # sent frames
+
+    self.previous_collision = False # if previous transmission was collision
 
   # Generate frame from generation probability
   def generate_frame(self, slot):

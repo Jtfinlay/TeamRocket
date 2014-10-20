@@ -1,14 +1,14 @@
 
 
 class Frame:
-  slot_generated = 0
-  slot_transmitted = -1
-
+  
   # Constructor
   #
   # @param slot: current slot
   def __init__(self, slot):
     self.slot_generated = slot
+    self.slot_transmitted = -1
+    self.generated = 0
 
   # Track when successfully transmitted
   #

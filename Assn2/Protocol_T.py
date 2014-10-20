@@ -5,16 +5,14 @@ import Frame
 #
 # Time Division Multiplexing
 #
-class Protocol:
-
-  stations = []
-
+class Protocol():
 
   # Constructor
   #
   # @param N: Number of stations
   # @param p: Frame generation probability
   def __init__(self, N, p):
+    self.stations = []
     for i in range(N):
       self.stations.append(Station(p))
 
@@ -40,24 +38,22 @@ class Protocol:
   # Get sum of delays / transmitted frame count
   def getTransmissionDelays(self):
     result = 0
+    transmissions = self.getTransmittedFrameCount()
     for node in self.stations:
       result += node.getTransmissionDelays()
-    return result / self.getTransmittedFrameCount()
-
+    return float(result) / transmissions if transmissions > 0 else 0
 
 class Station:
-
-  prob_generation = 0
-  frames_waiting = [] # Unsent frames
-  frames_sent = [] # Sent frames
 
   # Constructor
   #
   # @param p: Frame generation probability
   def __init__(self, p):
     self.prob_generation = p
+    self.frames_waiting = [] # Unsent frames
+    self.frames_sent = [] # Sent frames
 
-  # Generate frame from generation probability
+  # Generate frame from generation pr obability
   #
   # @param slot: current slot
   def generate_frame(self, slot):
