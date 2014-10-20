@@ -1,8 +1,10 @@
 
+import random
+
 #
 # Slotted ALOHA with interval-based backoff
 #
-class Protocol_I:
+class Protocol:
 
   stations = []
 
@@ -12,7 +14,7 @@ class Protocol_I:
   # @param p: Frame generation probability
   def __init__(self, N, p):
     for i in range(N):
-      self.stations.append(Station.Station(p))
+      self.stations.append(Station(p))
 
   # Run the protocol
   #
@@ -30,7 +32,7 @@ class Protocol_I:
 
       if len(t_stations) > 1:
         for i in t_stations:
-          self.stations[i].collision()
+          self.stations[i].collision(s, len(self.stations))
 
 class Station:
 
@@ -50,15 +52,15 @@ class Station:
   # Generate frame from generation probability
   def generate_frame(self):
     if random.random() <= self.prob_generation:
-      frames++
+      self.frames += 1
 
   # Transmit frame
   #
   # @param slot: Current slot number
   def transmit(self, slot):
-    if len(self.frame) > 0 && self.next_slot <= slot:
-      self.frames--
-      self.transmissions++
+    if self.frames > 0 and self.next_slot <= slot:
+      self.frames -= 1
+      self.transmissions += 1
       return True
     else:
       return False
@@ -69,5 +71,5 @@ class Station:
   # @param N: Number of stations
   def collision(self, slot, N):
     self.next_slot = slot + random.randint(1,N)
-    self.collisions++
-    self.frames++
+    self.collisions+=1
+    self.frames+=1

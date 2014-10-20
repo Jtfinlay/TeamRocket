@@ -1,8 +1,10 @@
 
+import random
+
 #
 # Slotted ALOHA with probabilistic backoff
 #
-class Protocol_P:
+class Protocol:
 
   stations = []
 
@@ -12,7 +14,7 @@ class Protocol_P:
   # @param p: Frame generation probability
   def __init__(self, N, p):
     for i in range(N):
-      self.stations.append(Station.Station(p))
+      self.stations.append(Station(p))
 
   # Run the protocol
   #
@@ -26,7 +28,7 @@ class Protocol_P:
         node.generate_frame()
 
         if node.previous_collision:
-          if node.transmit(1.0/N):
+          if node.transmit(1.0/len(self.stations)):
             t_stations.append(i)
         else:
           if node.transmit(1.0):
@@ -54,15 +56,15 @@ class Station:
   # Generate frame from generation probability
   def generate_frame(self):
     if random.random() <= self.prob_generation:
-      frames++
+      self.frames += 1
 
   # Transmit frame
   #
   # @param prob: Probability of transmitting
-  def transmit(self,):
-    if len(self.frame) > 0 && random.random() <= prob:
-      self.frames--
-      self.transmissions++
+  def transmit(self, prob):
+    if self.frames > 0 and random.random() <= prob:
+      self.frames -= 1
+      self.transmissions += 1
       self.previous_collision = False
       return True
     else:
@@ -71,5 +73,5 @@ class Station:
   # Collision detected. Put frame back into queue
   def collision(self):
     self.previous_collision = True
-    self.collisions++
-    self.frames++
+    self.collisions+=1
+    self.frames+=1

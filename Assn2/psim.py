@@ -5,8 +5,10 @@
 # Author: Jesse Tucker & James Finlay
 #
 
-import Protocol_P
 import Protocol_T
+import Protocol_P
+import Protocol_I
+import Protocol_B
 
 #
 # @param Protocol:
@@ -21,9 +23,20 @@ import Protocol_T
 def psim(Protocol, N, p, R, T):
 
 
-  for trial in range(T[0]):
+  # for trial in range(T[0]):
+  prot = None
+  if Protocol == 'T': prot = Protocol_T.Protocol(N,p)
+  elif Protocol == 'P': prot = Protocol_P.Protocol(N,p)
+  elif Protocol == 'I': prot = Protocol_I.Protocol(N,p)
+  elif Protocol == 'B': prot = Protocol_B.Protocol(N,p)
+  else: raise ValueError("Invalid Protocol")
+
+  prot.run(R)
 
 
 
 
 psim('T', 20, .01, 50000, [5, 1,2,3,4])
+psim('P', 20, .01, 50000, [5, 1,2,3,4])
+psim('I', 20, .01, 50000, [5, 1,2,3,4])
+psim('B', 20, .01, 50000, [5, 1,2,3,4])
