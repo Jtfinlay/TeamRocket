@@ -22,6 +22,8 @@ import Protocol_B
 # @param T: Number of trials, followed by seeds of file
 def psim(Protocol, N, p, R, T):
 
+  throughput = 0
+  delay_per_frame = 0
 
   for trial in range(T[0]):
     prot = None
@@ -32,6 +34,11 @@ def psim(Protocol, N, p, R, T):
     else: raise ValueError("Invalid Protocol")
 
     prot.run(R)
+    throughput += prot.getTransmittedFrameCount()/R
+    delay_per_frame += prot.getTransmissionDelays()
+
+  throughput /= T[0]
+  delay_per_frame /= T[0]
 
   # ---- OUTPUTS ---- #
   print Protocol,N,p,R,T[0],"\n"

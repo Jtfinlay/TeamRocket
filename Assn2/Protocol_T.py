@@ -30,12 +30,26 @@ class Protocol:
 
       self.stations[s-(s/len(self.stations))*len(self.stations)].transmit(s)
 
+  # Get count of transmitted frames
+  def getTransmittedFrameCount(self):
+    result = 0
+    for node in self.stations:
+      result += node.getTransmittedFrameCount()
+    return result
+
+  # Get sum of delays / transmitted frame count
+  def getTransmissionDelays(self):
+    result = 0
+    for node in self.stations:
+      result += node.getTransmissionDelays()
+    return result / self.getTransmittedFrameCount()
+
+
 class Station:
 
   prob_generation = 0
   frames_waiting = [] # Unsent frames
   frames_sent = [] # Sent frames
-  collisions = 0 # Number of collisions
 
   # Constructor
   #
@@ -49,6 +63,17 @@ class Station:
   def generate_frame(self, slot):
     if random.random() <= self.prob_generation:
       self.frames_waiting.append(Frame.Frame(slot))
+
+  # Get count of transmitted frames
+  def getTransmittedFrameCount(self):
+    return len(self.frames_sent)
+
+  # Get sum of delays
+  def getTransmissionDelays(self):
+    result = 0
+    for frame in self.frames_sent:
+      result += frame.getDelay()
+    return result
 
   # Transmit frame
   #
