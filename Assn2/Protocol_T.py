@@ -28,7 +28,7 @@ class Protocol:
       for node in self.stations:
         node.generate_frame(s)
 
-      self.stations[s-(s/len(self.stations))*len(self.stations)].transmit(s)
+      self.stations[s%len(self.stations)].transmit(s)
 
 class Station:
 
@@ -58,6 +58,3 @@ class Station:
       frame = self.frames_waiting.pop(0)
       frame.transmit(slot)
       self.frames_sent.append(frame)
-      return True
-    else:
-      return False

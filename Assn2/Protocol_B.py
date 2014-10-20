@@ -76,7 +76,7 @@ class Station:
   # @param slot: Current slot number
   def collision(self, slot):
     self.prev_collisions+=1
-    upper = random.randint(1, min(self.max_interval, math.pow(2,self.prev_collisions)))
+    upper = min(self.max_interval, math.pow(2,self.prev_collisions))
     self.next_slot = slot + random.randint(1,upper)
 
     frame = self.frames_sent.pop()
