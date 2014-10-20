@@ -27,9 +27,11 @@ class Protocol:
       for i, node in enumerate(self.stations):
         node.generate_frame(s)
 
-        if node.previous_collision and node.transmit(1.0/len(self.stations),s):
+        if node.previous_collision:
+          if node.transmit(1.0/len(self.stations),s):
             t_stations.append(i)
-        elif node.transmit(1.0,s):
+        else:
+          if node.transmit(1.0,s):
             t_stations.append(i)
 
       if len(t_stations) > 1:
