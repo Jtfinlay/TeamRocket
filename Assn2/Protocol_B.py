@@ -1,8 +1,8 @@
 
 #
-# Slotted ALOHA with interval-based backoff
+# Slotted ALOHA with a binary exponential backoff
 #
-class Protocol_I:
+class Protocol_B:
 
   stations = []
 
@@ -28,9 +28,11 @@ class Protocol_I:
         if node.transmit(i):
           t_stations.append(i)
 
-      if len(t_stations) > 1:
-        for i in t_stations:
+      for i in t_stations:
+        if len(t_stations) > 1:
           self.stations[i].collision()
+        else:
+          self.stations[i].reset_collision_sequence()
 
 class Station:
 
@@ -39,7 +41,9 @@ class Station:
   transmissions = 0 # Number of transmissions sent
   collisions = 0 # Number of collisions
 
-  next_slot = 0 # Next interval to transmit on
+  prev_collisions = 0 # Number of collisions in sequence
+  next_slot = 0 # Next slot to transmit on
+  max_interval = 512
 
   # Constructor
   #
@@ -47,7 +51,8 @@ class Station:
   def __init__(self, p):
     self.prob_generation = p
 
-  # Generate frame from generation probability
+
+  # Genereate frame from generation probability
   def generate_frame(self):
     if random.random() <= self.prob_generation:
       frames++
@@ -66,8 +71,13 @@ class Station:
   # Collision detected. Put frame back into queue
   #
   # @param slot: Current slot number
-  # @param N: Number of stations
-  def collision(self, slot, N):
-    self.next_slot = slot + random.randint(1,N)
-    self.collisions++
+  def collision(self, slot):
+    self.prev_collisions++
+    upper = random.randint(1, min(self.max_interval, math.pow(2,self.prev_collisions)))
+    self.next_slot = slot + random.randint(1,upper)
+    self.collsions++
     self.frames++
+
+  # Successful transmission! Reset failure sequence
+  def reset_collision_sequence(self):
+    self.prev_collisions = 0

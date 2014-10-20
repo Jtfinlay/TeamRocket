@@ -25,20 +25,5 @@ def psim(Protocol, N, p, R, T):
 
 
 
-# Slotted ALOHA with interval-based backoff
-#
-# @param N: Number of stations
-# @param p: Frame generation probability
-# @param R: Total number of slots
-def protocol_I(N, p, R):
-
-  stations = [];
-  for i in range(N):
-    stations.append(Station.Station(p))
-
-  for s in range(R):
-
-
-
 
 psim('T', 20, .01, 50000, [5, 1,2,3,4])
