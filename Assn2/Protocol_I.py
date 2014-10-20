@@ -1,8 +1,8 @@
 
 #
-# Slotted ALOHA with probabilistic backoff
+# Slotted ALOHA with interval-based backoff
 #
-class Protocol_P:
+class Protocol_I:
 
   stations = []
 
@@ -23,14 +23,10 @@ class Protocol_P:
       t_stations = []
 
       for i, node in enumerate(self.stations):
-        node.generate_frame()
+        node.generate_Frame()
 
-        if node.previous_collision:
-          if node.transmit(1.0/N):
-            t_stations.append(i)
-        else:
-          if node.transmit(1.0):
-            t_stations.append(i)
+        if node.transmit(i):
+          t_stations.append(i)
 
       if len(t_stations) > 1:
         for i in t_stations:
@@ -38,12 +34,12 @@ class Protocol_P:
 
 class Station:
 
-  prob_generation = 0 # Probability of generating a frame
+  prob_generation = 0
   frames = 0 # Number of frames in queue
   transmissions = 0 # Number of transmissions sent
   collisions = 0 # Number of collisions
 
-  previous_collision = False # if previous transmission was collision
+  next_interval = 0 # Next interval to transmit on
 
   # Constructor
   #
@@ -58,18 +54,20 @@ class Station:
 
   # Transmit frame
   #
-  # @param prob: Probability of transmitting
-  def transmit(self,):
-    if len(self.frame) > 0 && random.random() <= prob:
+  # @param slot: Current slot number
+  def transmit(self, slot):
+    if len(self.frame) > 0 && self.next_interval <= slot:
       self.frames--
       self.transmissions++
-      self.previous_collision = False
       return True
     else:
       return False
 
   # Collision detected. Put frame back into queue
-  def collision(self):
-    self.previous_collision = True
+  #
+  # @param slot: Current slot number
+  # @param N: Number of stations
+  def collision(self, slot, N):
+    self.next_interval = slot + random.randint(1,N)
     self.collisions++
     self.frames++
