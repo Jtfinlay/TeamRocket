@@ -5,6 +5,7 @@
 # Author: Jesse Tucker & James Finlay
 #
 
+import math
 import random
 import sys
 
@@ -25,8 +26,8 @@ import Protocol_B
 # @param T: Number of trials, followed by seeds of file
 def psim(Protocol, N, p, R, T):
 
-  throughput = 0
-  delay_per_frame = 0
+  throughput = []
+  delay_per_frame = []
 
   for trial in range(T[0]):
     if len(T) > trial + 1:
@@ -40,20 +41,31 @@ def psim(Protocol, N, p, R, T):
     else: raise ValueError("Invalid Protocol")
 
     prot.run(R)
-    print "throughput: ",float(prot.getTransmittedFrameCount())/R
-    throughput += float(prot.getTransmittedFrameCount()) / R
-    delay_per_frame += prot.getTransmissionDelays()
+    throughput.append(float(prot.getTransmittedFrameCount()) / float(R))
+    delay_per_frame.append(prot.getTransmissionDelays())
 
-  throughput /= float(T[0])
-  delay_per_frame /= float(T[0])
+  throughput_avg = sum(throughput) / float(T[0])
+  delay_per_frame_avg = sum(delay_per_frame) / float(T[0])
+  throughput_std = calcStandardDeviation(throughput, throughput_avg)
+  delay_per_frame_std = calcStandardDeviation(delay_per_frame, delay_per_frame_avg)
 
   # ---- OUTPUTS ---- #
   print Protocol,N,p,R,T[0],"\n"
   # Average throughput followed by confidence interval
-  print throughput,"\n"
+  print throughput_avg, throughput_std
   # Overall average per-frame delay followed by conf. int.
-  print delay_per_frame,"\n"
+  print delay_per_frame_avg, delay_per_frame_std
 
+def calcStandardDeviation(arr, mean):
+  result = 0
+  for val in arr:
+      result += (val - mean) * (val - mean)
+
+  if len(arr) > 1:
+      result = math.sqrt(result / (len(arr) - 1))
+  else:
+      result = math.sqrt(result)
+  return result
 
 if(len(sys.argv) > 5):
 
