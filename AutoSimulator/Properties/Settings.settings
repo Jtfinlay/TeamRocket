@@ -5,5 +5,8 @@
     <Setting Name="PathToPython" Type="System.String" Scope="Application">
       <Value Profile="(Default)">C:\Python27\python.exe</Value>
     </Setting>
+    <Setting Name="SimulatorDir" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\Users\Jesse\Documents\GitHub\TeamRocket\Assn2\</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

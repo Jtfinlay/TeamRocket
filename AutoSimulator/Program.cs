@@ -10,22 +10,22 @@ using Excel = Microsoft.Office.Interop.Excel;
 
 namespace AutoSimulator
 {
-	class TestResults
+	class TestResult
 	{
-		public float TestParam { get; set; }
+		public float Probability { get; set; }
 
 		public float Throughput { get; set; }
 		public float Throughput_leftInterval { get; set; }
 		public float Throughput_rightInverval { get; set; }
 
-		public float TransmissionPerFrame { get; set; }
-		public float TransmissionPerFrame_leftInterval { get; set; }
-		public float TransmissionPerFrame_rightInverval { get; set; }
+		public float Delay { get; set; }
+		public float Delay_leftInterval { get; set; }
+		public float Delay_rightInverval { get; set; }
 	}
 
 	class Program
 	{
-		const String PYTHON_MAIN = "main.py";
+		const String PYTHON_MAIN = "psim.py";
 		static String s_pathToMainPython = null;
 		static String PathToMainPython
 		{
@@ -33,8 +33,13 @@ namespace AutoSimulator
 			{
 				if(s_pathToMainPython == null)
 				{
-					s_pathToMainPython = FindPythonMain(Environment.CurrentDirectory);
-					if(s_pathToMainPython == null)
+					s_pathToMainPython = FindFile(	new List<String>() 
+													{
+														Settings.Default.SimulatorDir, 
+														Environment.CurrentDirectory 
+													},
+													PYTHON_MAIN);
+					if (s_pathToMainPython == null)
 					{
 						throw new InvalidOperationException("could not find : " + PYTHON_MAIN);
 					}
@@ -51,7 +56,12 @@ namespace AutoSimulator
 			{
 				if(s_outputDataPath == null)
 				{
-					s_outputDataPath = FindOutputDataPath(Environment.CurrentDirectory);
+					s_outputDataPath = FindFile(	new List<String>() 
+													{
+														Settings.Default.SimulatorDir, 
+														Environment.CurrentDirectory 
+													}, 
+													OUTPUT_DATA_FOLDER, true);
 					if (s_outputDataPath == null)
 					{
 						throw new InvalidOperationException("Could not find output data directory! : " + OUTPUT_DATA_FOLDER);
@@ -62,52 +72,55 @@ namespace AutoSimulator
 			}
 		}
 
-		const String TransmissionRegex = @"average of (?<average>-*\d*\.\d*\S*) transmissions [^\[\]]*\[(?<leftInterval>-*\d*\.\d*\S*),(?<rightIntverval>-*\d*\.\d*\S*)\]";
-		const String ThroughputRegex = @"average throughput of (?<average>-*\d*\.\d*\S*) bits/time_unit [^\[\]]*\[(?<leftInterval>-*\d*\.\d*\S*),(?<rightIntverval>-*\d*\.\d*\S*)\]";
-
-		static String FindPythonMain(string dir)
+		static String FindFile(IEnumerable<String> dirs, string target, bool isDirectory = false)
 		{
-			var path =	(from file in Directory.GetFiles(dir)
-						where file.Contains(PYTHON_MAIN)
+			String result = null;
+			foreach(var dir in dirs)
+			{
+				result = FindPath(dir, target, isDirectory);
+				if(result != null)
+				{
+					break;
+				}
+			}
+
+			return result;
+		}
+
+		static String FindPath(string dir, string target, bool isDirectory = false)
+		{
+			String path = null;
+			if (!isDirectory)
+			{
+				path = (from file in Directory.GetFiles(dir)
+						where file.Contains(target)
 						select file).FirstOrDefault();
+			}
+			else
+			{
+				path = (from file in Directory.GetDirectories(dir)
+						where file.Contains(target)
+						select file).FirstOrDefault();
+			}
 
 			if(path == null)
 			{
 				var parentDir = Directory.GetParent(dir);
 				if (parentDir != null)
 				{
-					path = FindPythonMain(parentDir.FullName);
+					path = FindPath(parentDir.FullName, target);
 				}
 			}
 
 			return path;
 		}
 
-		static String FindOutputDataPath(string dir)
+		static TestResult RunTest(String protocolType, int stationCount, float probability, int simulationTime, int trials, IEnumerable<int> seeds)
 		{
-			var path = (from file in Directory.GetDirectories(dir)
-						where file.Contains(OUTPUT_DATA_FOLDER)
-						select file).FirstOrDefault();
+			TestResult testResults = new TestResult();
 
-			if (path == null)
-			{
-				var parentDir = Directory.GetParent(dir);
-				if (parentDir != null)
-				{
-					path = FindOutputDataPath(parentDir.FullName);
-				}
-			}
-
-			return path;
-		}
-
-		static TestResults RunTest(int feedbackTime, int blockCount, int frameSize, double probability, int simulationTime, int trials, List<int> seeds)
-		{
-			TestResults testResults = new TestResults();
-
-			var pythonArgs =	" " + feedbackTime + 
-								" " + blockCount + 
-								" " + frameSize + 
+			var pythonArgs =	" " + protocolType +
+								" " + stationCount + 
 								" " + probability + 
 								" " + simulationTime +
 								" " + trials + 
@@ -127,41 +140,36 @@ namespace AutoSimulator
 			var rawResults = testProc.StandardOutput.ReadToEnd();
 			testProc.WaitForExit();
 
-			var match = Regex.Match(rawResults, TransmissionRegex, RegexOptions.Compiled);
-			testResults.TransmissionPerFrame = float.Parse(match.Groups["average"].ToString());
-			testResults.TransmissionPerFrame_leftInterval = float.Parse(match.Groups["leftInterval"].ToString());
-			testResults.TransmissionPerFrame_rightInverval = float.Parse(match.Groups["rightIntverval"].ToString());
+			rawResults = rawResults.Replace('\r', ' ');
+			var lines = rawResults.Split('\n');
+			// line 2 is throughput + confidence
+			// line 3 is delay + confidence
+			var line2 = lines[1];
+			var line3 = lines[2];
 
-			match = Regex.Match(rawResults, ThroughputRegex, RegexOptions.Compiled);
-			testResults.Throughput = float.Parse(match.Groups["average"].ToString());
-			testResults.Throughput_leftInterval = float.Parse(match.Groups["leftInterval"].ToString());
-			testResults.Throughput_rightInverval = float.Parse(match.Groups["rightIntverval"].ToString());
+			var words = line2.Split(' ');
+			testResults.Throughput = float.Parse(words[0]);
+			var throughputStd = float.Parse(words[1]);
+			testResults.Throughput_leftInterval = testResults.Throughput - throughputStd;
+			testResults.Throughput_rightInverval = testResults.Throughput + throughputStd;
+
+			words = line3.Split(' ');
+			testResults.Delay = float.Parse(words[0]);
+			var delayStd = float.Parse(words[1]);
+			testResults.Delay_leftInterval = testResults.Delay - delayStd;
+			testResults.Delay_rightInverval = testResults.Delay + delayStd;
+
+			testResults.Probability = probability;
 
 			return testResults;
 		}
 
 		static void Main(string[] args)
 		{
-			
-			var t1 = Task.Factory.StartNew(() =>
-			{
-				TestBlockSizeGreaterThanOne();
-			});
-			/*var t2 = Task.Factory.StartNew(() =>
-			{
-				TestBlockSizeZeroAndOne();
-			});*/
-			/*var t3 = Task.Factory.StartNew(() =>
-			{
-				TestThroughputWithRespectToProbability();
-			});*/
-
-			t1.Wait();
-			//t2.Wait();
-			//t3.Wait();
+			TwentyStations();
 		}
 
-		static void OutputResults(String fileName, string paramName, List<TestResults> results)
+		static void OutputResults(String fileName, string paramName, List<TestResult> results)
 		{
 			const int Param_col = 1;
 
@@ -169,9 +177,9 @@ namespace AutoSimulator
 			const int Throughput_left_col = 4;
 			const int Throughput_right_col = 5;
 
-			const int averageTransmissions_col = 7;
-			const int averageTransmissions_left_col = 8;
-			const int averageTransmissions_right_col = 9;
+			const int averageDelay_col = 7;
+			const int averageDelay_left_col = 8;
+			const int averageDelay_right_col = 9;
 
 			Excel.Application xlApp = new Excel.Application();
 			Excel.Workbook xlWorkBook = xlApp.Workbooks.Add();
@@ -180,7 +188,7 @@ namespace AutoSimulator
 			xlApp.DisplayAlerts = false;
 			xlApp.AlertBeforeOverwriting = false;
 
-			results.Sort((left, right) =>  left.TestParam.CompareTo(right.TestParam) );
+			results.Sort((left, right) => left.Probability.CompareTo(right.Probability));
 
 			// first write in the headers
 			{
@@ -190,24 +198,24 @@ namespace AutoSimulator
 				xlWorkSheet.Cells[1, Throughput_left_col] = "Throughput Left Interval";
 				xlWorkSheet.Cells[1, Throughput_right_col] = "Throughput Right Interval";
 
-				xlWorkSheet.Cells[1, averageTransmissions_col] = "Average Transmissions Per Frame";
-				xlWorkSheet.Cells[1, averageTransmissions_left_col] = "Average Transmissions Per Frame Left Interval";
-				xlWorkSheet.Cells[1, averageTransmissions_right_col] = "Average Transmissions Per Frame Right Interval";
+				xlWorkSheet.Cells[1, averageDelay_col] = "Average Delay Per Frame";
+				xlWorkSheet.Cells[1, averageDelay_left_col] = "Average Delay Per Frame Left Interval";
+				xlWorkSheet.Cells[1, averageDelay_right_col] = "Average Delay Per Frame Right Interval";
 			}
 
 			// now write each element row by row
 			int rowNum = 2;
 			foreach (var res in results)
 			{
-				xlWorkSheet.Cells[rowNum, Param_col] = res.TestParam;
+				xlWorkSheet.Cells[rowNum, Param_col] = res.Probability;
 
 				xlWorkSheet.Cells[rowNum, Throughput_col] = res.Throughput;
 				xlWorkSheet.Cells[rowNum, Throughput_left_col] = res.Throughput_leftInterval;
 				xlWorkSheet.Cells[rowNum, Throughput_right_col] = res.Throughput_rightInverval;
 
-				xlWorkSheet.Cells[rowNum, averageTransmissions_col] = res.TransmissionPerFrame;
-				xlWorkSheet.Cells[rowNum, averageTransmissions_left_col] = res.TransmissionPerFrame_leftInterval;
-				xlWorkSheet.Cells[rowNum, averageTransmissions_right_col] = res.TransmissionPerFrame_rightInverval;
+				xlWorkSheet.Cells[rowNum, averageDelay_col] = res.Delay;
+				xlWorkSheet.Cells[rowNum, averageDelay_left_col] = res.Delay_leftInterval;
+				xlWorkSheet.Cells[rowNum, averageDelay_right_col] = res.Delay_rightInverval;
 
 				++rowNum;
 			}
@@ -242,125 +250,39 @@ namespace AutoSimulator
 		}
 
 #region Tests
-
-#region Varying Block-size > 1
-		static void TestBlockSizeGreaterThanOne()
+		public static void TwentyStations()
 		{
-			const int START_BLOCK_COUNT = 1;
-			const int END_BLOCK_COUNT = 500;
-			const int BLOCK_COUNT_STEP = 1;
+			const int STATIONS = 20;
+			const int SLOT_TIME = 5000;
+			const int TRIAL_COUNT = 5;
+			var SEEDS = Enumerable.Range(1, TRIAL_COUNT);
 
-			const int FEEDBACK_TIME = 500;
-			const int FRAME_SIZE = 4000;
-			const float PROBABILITY = 0.0005F;
-			const int SIMULATION_TIME = 50000;
-			const int TRIALS = 500;
-			List<int> SEEDS = Enumerable.Range(0, TRIALS).ToList<int>();
+			const float PROBABILITY_START = 0.0F;
+			const float PROBABILITY_END = 0.15F;
+			const int NUMBER_OF_TESTS = 10;
 
-			List<TestResults> results = new List<TestResults>();
-
-			for(int blockCount = START_BLOCK_COUNT; blockCount < END_BLOCK_COUNT ; blockCount += BLOCK_COUNT_STEP)
+			Dictionary<String, List<TestResult>> results = new Dictionary<string,List<TestResult>>()
 			{
-				if(FRAME_SIZE % blockCount == 0)
+				{ "T", new List<TestResult>() },
+				{ "P", new List<TestResult>() },
+				{ "I", new List<TestResult>() },
+				{ "B", new List<TestResult>() }
+			};
+
+			foreach(var protToTest in results)
+			{
+				List<TestResult> currentRun = new List<TestResult>();
+				for (int testNum = 0; testNum < NUMBER_OF_TESTS; ++testNum )
 				{
-
-					var res = RunTest(FEEDBACK_TIME, blockCount, FRAME_SIZE, PROBABILITY, SIMULATION_TIME, TRIALS, SEEDS);
-					res.TestParam = blockCount;
-					results.Add(res);
+					float probability = PROBABILITY_START + (float)(testNum) / NUMBER_OF_TESTS * PROBABILITY_END;
+					currentRun.Add(RunTest(protToTest.Key, STATIONS, probability, SLOT_TIME, TRIAL_COUNT, SEEDS));
 				}
-			}
 
-			OutputResults("test_blockSizeGreaterThanOne", "BlockCount", results);
+				OutputResults("TwentyStations_" + protToTest.Key, "Probability", currentRun);
+			}
+			
+			
 		}
-#endregion
-
-		#region Compare block size zero and one
-		static void TestBlockSizeZeroAndOne()
-		{
-			const int ZERO_BLOCK_SIZE = 0;
-			const int ONE_BLOCK_SIZE = 1;
-
-			const float PROBABILITY_START = 0.000500F;
-			const float PROBABILITY_END =	0.000005F;
-			const float PROBABILITY_STEP = (PROBABILITY_START - PROBABILITY_END) / 50;
-
-			const int FEEDBACK_TIME = 500;
-			const int FRAME_SIZE = 4000;
-			const int SIMULATION_TIME = 50000;
-			const int TRIALS = 300;
-			List<int> SEEDS = Enumerable.Range(0, TRIALS).ToList<int>();
-
-			List<TestResults> results = new List<TestResults>();
-
-			for (float probability = PROBABILITY_START; probability > PROBABILITY_END; probability -= PROBABILITY_STEP)
-			{
-				var res = RunTest(FEEDBACK_TIME, ZERO_BLOCK_SIZE, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS);
-				res.TestParam = probability;
-				results.Add(res);
-			}
-
-			OutputResults("test_blockSizeZero", "probability", results);
-			results = new List<TestResults>();
-
-			for (float probability = PROBABILITY_START; probability > PROBABILITY_END; probability -= PROBABILITY_STEP)
-			{
-				var res = RunTest(FEEDBACK_TIME, ONE_BLOCK_SIZE, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS);
-				res.TestParam = probability;
-				results.Add(res);
-			}
-
-			OutputResults("test_blockSizeOne", "probability", results);
-			results = new List<TestResults>();
-
-			for (float probability = PROBABILITY_START; probability > PROBABILITY_END; probability -= PROBABILITY_STEP)
-			{
-				var res = RunTest(FEEDBACK_TIME, 20, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS);
-				res.TestParam = probability;
-				results.Add(res);
-			}
-
-			OutputResults("test_blockSizeTwenty", "probability", results);
-			results = new List<TestResults>();
-
-			for (float probability = PROBABILITY_START; probability > PROBABILITY_END; probability -= PROBABILITY_STEP)
-			{
-				var res = RunTest(FEEDBACK_TIME, 80, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS);
-				res.TestParam = probability;
-				results.Add(res);
-			}
-
-			OutputResults("test_blockSizeEighty", "probability", results);
-		}
-		#endregion
-
-		#region Compare block size zero and one
-		static void TestThroughputWithRespectToProbability()
-		{	
-			const float PROBABILITY_START = 0.001500F;
-			const float PROBABILITY_END =	0.000005F;
-			const float PROBABILITY_STEP = (PROBABILITY_START - PROBABILITY_END) / 100;
-
-			const int BLOCK_SIZE = 4;
-			const int FEEDBACK_TIME = 500;
-			const int FRAME_SIZE = 4000;
-			const int SIMULATION_TIME = 50000;
-			const int TRIALS = 500;
-			List<int> SEEDS = Enumerable.Range(0, TRIALS).ToList<int>();
-
-			List<TestResults> results = new List<TestResults>();
-
-			for (float probability = PROBABILITY_START; probability > PROBABILITY_END; probability -= PROBABILITY_STEP)
-			{
-				var res = RunTest(FEEDBACK_TIME, BLOCK_SIZE, FRAME_SIZE, probability, SIMULATION_TIME, TRIALS, SEEDS);
-				res.TestParam = probability;
-				results.Add(res);
-			}
-
-			OutputResults("test_throughput", "probability", results);
-		}
-		#endregion
-
-
 #endregion
 	}
 }

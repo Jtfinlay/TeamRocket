@@ -31,5 +31,17 @@ namespace AutoSimulator.Properties {
                 return ((string)(this["PathToPython"]));
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\Users\\Jesse\\Documents\\GitHub\\TeamRocket\\Assn2\\")]
+        public string SimulatorDir {
+            get {
+                return ((string)(this["SimulatorDir"]));
+            }
+            set {
+                this["SimulatorDir"] = value;
+            }
+        }
     }
 }

@@ -50,7 +50,7 @@ def psim(Protocol, N, p, R, T):
   delay_per_frame_std = calcStandardDeviation(delay_per_frame, delay_per_frame_avg)
 
   # ---- OUTPUTS ---- #
-  print Protocol,N,p,R,T[0],"\n"
+  print Protocol,N,p,R,T[0]
   # Average throughput followed by confidence interval
   print throughput_avg, throughput_std
   # Overall average per-frame delay followed by conf. int.
