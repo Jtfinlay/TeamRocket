@@ -12,7 +12,7 @@ namespace AutoSimulator
 {
 	class TestResult
 	{
-		public float Probability { get; set; }
+		public float TestParam { get; set; }
 
 		public float Throughput { get; set; }
 		public float Throughput_leftInterval { get; set; }
@@ -159,14 +159,32 @@ namespace AutoSimulator
 			testResults.Delay_leftInterval = testResults.Delay - delayStd;
 			testResults.Delay_rightInverval = testResults.Delay + delayStd;
 
-			testResults.Probability = probability;
-
 			return testResults;
 		}
 
 		static void Main(string[] args)
 		{
-			TwentyStations();
+			var t1 = Task.Factory.StartNew(() =>
+			{
+				VariedProbability();
+			});
+			var t2 = Task.Factory.StartNew(() =>
+			{
+				VariedStationCount(0.001F);
+			});
+			var t3 = Task.Factory.StartNew(() =>
+			{
+				VariedStationCount(0.01F);
+			});
+			var t4 = Task.Factory.StartNew(() =>
+			{
+				VariedStationCount(0.1F);
+			});
+
+			t1.Wait();
+			t2.Wait();
+			t3.Wait();
+			t4.Wait();
 		}
 
 		static void OutputResults(String fileName, string paramName, List<TestResult> results)
@@ -188,7 +206,7 @@ namespace AutoSimulator
 			xlApp.DisplayAlerts = false;
 			xlApp.AlertBeforeOverwriting = false;
 
-			results.Sort((left, right) => left.Probability.CompareTo(right.Probability));
+			results.Sort((left, right) => left.TestParam.CompareTo(right.TestParam));
 
 			// first write in the headers
 			{
@@ -207,7 +225,7 @@ namespace AutoSimulator
 			int rowNum = 2;
 			foreach (var res in results)
 			{
-				xlWorkSheet.Cells[rowNum, Param_col] = res.Probability;
+				xlWorkSheet.Cells[rowNum, Param_col] = res.TestParam;
 
 				xlWorkSheet.Cells[rowNum, Throughput_col] = res.Throughput;
 				xlWorkSheet.Cells[rowNum, Throughput_left_col] = res.Throughput_leftInterval;
@@ -250,16 +268,18 @@ namespace AutoSimulator
 		}
 
 #region Tests
-		public static void TwentyStations()
+
+		const int SLOT_TIME = 50000;
+		const int TRIAL_COUNT = 50;
+		const int NUMBER_OF_TESTS = 100;
+
+		public static void VariedProbability()
 		{
 			const int STATIONS = 20;
-			const int SLOT_TIME = 5000;
-			const int TRIAL_COUNT = 5;
 			var SEEDS = Enumerable.Range(1, TRIAL_COUNT);
 
 			const float PROBABILITY_START = 0.0F;
 			const float PROBABILITY_END = 0.15F;
-			const int NUMBER_OF_TESTS = 10;
 
 			Dictionary<String, List<TestResult>> results = new Dictionary<string,List<TestResult>>()
 			{
@@ -275,13 +295,43 @@ namespace AutoSimulator
 				for (int testNum = 0; testNum < NUMBER_OF_TESTS; ++testNum )
 				{
 					float probability = PROBABILITY_START + (float)(testNum) / NUMBER_OF_TESTS * PROBABILITY_END;
-					currentRun.Add(RunTest(protToTest.Key, STATIONS, probability, SLOT_TIME, TRIAL_COUNT, SEEDS));
+					var res = RunTest(protToTest.Key, STATIONS, probability, SLOT_TIME, TRIAL_COUNT, SEEDS);
+					res.TestParam = probability;
+					currentRun.Add(res);
 				}
 
-				OutputResults("TwentyStations_" + protToTest.Key, "Probability", currentRun);
+				OutputResults("VariedProbability_" + protToTest.Key, "Probability", currentRun);
 			}
-			
-			
+		}
+
+		public static void VariedStationCount(float probability)
+		{
+			var SEEDS = Enumerable.Range(1, TRIAL_COUNT);
+
+			const int STATION_START = 2;
+			const int STATION_END = 100;
+
+			Dictionary<String, List<TestResult>> results = new Dictionary<string, List<TestResult>>()
+			{
+				{ "T", new List<TestResult>() },
+				{ "P", new List<TestResult>() },
+				{ "I", new List<TestResult>() },
+				{ "B", new List<TestResult>() }
+			};
+
+			foreach (var protToTest in results)
+			{
+				List<TestResult> currentRun = new List<TestResult>();
+				for (int testNum = 0; testNum < NUMBER_OF_TESTS; ++testNum)
+				{
+					int stations = (int)(STATION_START + (float)(testNum) / NUMBER_OF_TESTS * STATION_END);
+					var res = RunTest(protToTest.Key, stations, probability, SLOT_TIME, TRIAL_COUNT, SEEDS);
+					res.TestParam = stations;
+					currentRun.Add(res);
+				}
+
+				OutputResults("VariedStations_" + "_p_" + probability.ToString("0.000") + "_" + protToTest.Key + ".xlsx", "Stations", currentRun);
+			}
 		}
 #endregion
 	}

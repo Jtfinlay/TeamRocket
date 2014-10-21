@@ -1,2 +1,2 @@
 cls
-python ./psim.py T 20 0.04 5000 5 50 10 20 30
+python ./psim.py P 2 0.001 500 5 1 2 3 4 5
