@@ -6,6 +6,7 @@
 #
 
 import random
+import sys
 
 import Protocol_T
 import Protocol_P
@@ -54,7 +55,15 @@ def psim(Protocol, N, p, R, T):
   print delay_per_frame,"\n"
 
 
-psim('T', 20, .01, 50000, [5, 1,2,3,4,5])
-psim('P', 20, .01, 50000, [5, 1,2,3,4,5])
-psim('I', 20, .01, 50000, [5, 1,2,3,4,5])
-psim('B', 20, .01, 50000, [5, 1,2,3,4,5])
+if(len(sys.argv) > 5):
+
+  protocol = sys.argv[1]
+  stations = int(sys.argv[2])
+  probability = float(sys.argv[3])
+  slotTime = int(sys.argv[4])
+  trials = map(int, sys.argv[5:])
+  
+  psim(protocol, stations, probability, slotTime, trials)
+else:
+  print "Invalid Arguments passed in! Please pass in the format :"
+  print "<Protocal Type> <Number of Stations> <probability of generating a frame> <slot time> <Number of Trials> <seed for trial 1> <seed for trial 2> ... <seed for trial N"
