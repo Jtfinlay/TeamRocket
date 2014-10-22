@@ -269,9 +269,9 @@ namespace AutoSimulator
 
 #region Tests
 
-		const int SLOT_TIME = 50000;
-		const int TRIAL_COUNT = 50;
-		const int NUMBER_OF_TESTS = 100;
+		const int SLOT_TIME = 10000;
+		const int TRIAL_COUNT = 10;
+		const int NUMBER_OF_TESTS = 50;
 
 		public static void VariedProbability()
 		{
@@ -298,6 +298,8 @@ namespace AutoSimulator
 					var res = RunTest(protToTest.Key, STATIONS, probability, SLOT_TIME, TRIAL_COUNT, SEEDS);
 					res.TestParam = probability;
 					currentRun.Add(res);
+
+					System.Console.WriteLine("Test : " + testNum + " / " + NUMBER_OF_TESTS + " completed!");
 				}
 
 				OutputResults("VariedProbability_" + protToTest.Key, "Probability", currentRun);
@@ -328,6 +330,8 @@ namespace AutoSimulator
 					var res = RunTest(protToTest.Key, stations, probability, SLOT_TIME, TRIAL_COUNT, SEEDS);
 					res.TestParam = stations;
 					currentRun.Add(res);
+
+					System.Console.WriteLine("Test : " + testNum + " / " + NUMBER_OF_TESTS + " completed!");
 				}
 
 				OutputResults("VariedStations_" + "_p_" + probability.ToString("0.000") + "_" + protToTest.Key + ".xlsx", "Stations", currentRun);
